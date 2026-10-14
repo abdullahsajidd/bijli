@@ -136,8 +136,7 @@ details.rates[open] summary{margin-bottom:12px}
     </div>
 
     <div class="btns">
-      <button class="btn" type="submit" id="calc">Calculate</button>
-      <button class="btn ghost" type="button" id="save">Save this month</button>
+      <button class="btn" type="submit" id="calc">Calculate &amp; save</button>
     </div>
   </form>
 
@@ -439,16 +438,18 @@ function fillFrom(entry){
 
 // ---------- events ----------
 document.querySelectorAll('.switch button').forEach(b => b.addEventListener('click', () => setMeter(b.dataset.meter)));
-$('form').addEventListener('submit', e => { e.preventDefault(); calc(); $('result').scrollIntoView({behavior:'smooth', block:'start'}); });
+// Calculate also saves the month (readings, units and bill) in this browser
+$('form').addEventListener('submit', e => { e.preventDefault(); saveEntry(); $('result').scrollIntoView({behavior:'smooth', block:'start'}); });
 $('form').addEventListener('input', e => { if (e.target.id === 'month') suggestCarry(); calc(); });
-$('save').addEventListener('click', () => {
+function saveEntry(){
   const res = calc(); if (!res.i.month){ toast('Choose a month first'); return; }
+  if (Object.values(res.i.read || {}).every(v => String(v).trim() === '')){ toast('Write the readings first'); return; }
   state.saved = state.saved.filter(s => !(s.meter===state.meter && s.month===res.i.month));
   state.saved.push({id: Date.now().toString(36), meter: state.meter, month: res.i.month, inputs: res.i,
     total: res.total, carryOut: res.carryOut || 0, savedAt: new Date().toISOString()});
   toast(store() ? `${monthName(res.i.month)} saved` : 'Could not save on this device');
   renderHistory();
-});
+}
 $('hist').addEventListener('click', e => {
   const t = e.target.closest('button'); if (!t) return;
   if (t.dataset.open){ const s = state.saved.find(x => x.id===t.dataset.open); fillFrom(s); calc(); $('form').scrollIntoView({behavior:'smooth'}); }
