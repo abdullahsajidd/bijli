@@ -139,14 +139,6 @@ details.rates[open] summary{margin-bottom:12px}
       <button class="btn" type="submit" id="calc">Calculate</button>
       <button class="btn ghost" type="button" id="save">Save this month</button>
     </div>
-    <div class="btns" id="newbill-row">
-      <button class="btn ghost sm" type="button" id="newbill">New bill came: count from these readings</button>
-    </div>
-    <div class="note" id="newbill-confirm" hidden>
-      Use these readings as the last bill’s readings? Next time units are counted from here.
-      <div class="btns" style="margin-top:8px"><button class="btn sm" type="button" id="newbill-yes">Yes, use them</button>
-      <button class="btn ghost sm" type="button" id="newbill-no">Cancel</button></div>
-    </div>
   </form>
 
   <section class="card" id="result" aria-live="polite"></section>
@@ -163,7 +155,7 @@ details.rates[open] summary{margin-bottom:12px}
   <details class="card rates" id="rates-box">
     <summary>Settings &amp; rates (change only when LESCO changes them)</summary>
     <div class="fields" id="rates"></div>
-    <p class="small muted" style="margin:0">Defaults checked against the September 2026 bills of both meters and LESCO’s official bill estimator (Oct 2026). Rate changes are saved on this device.</p>
+    <p class="small muted" style="margin:0">Defaults checked against the September 2026 bills of both meters and LESCO’s official bill estimator (Oct 2026). Changes here are for trying out numbers only and reset when the page is reopened.</p>
     <div class="btns">
       <button class="btn ghost sm" type="button" id="rates-reset">Reset to defaults</button>
       <button class="btn ghost sm" type="button" id="backup">Copy backup</button>
@@ -227,8 +219,9 @@ const LESCO = {
 // ---------- storage (always safe) ----------
 const KEY = 'bijli-hisaab-v1';
 function load(){ try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } }
-function store(){ try { localStorage.setItem(KEY, JSON.stringify(state)); return true; } catch { return false; } }
-const state = Object.assign({meter:'three', rates:{}, saved:[]}, load());
+function store(){ try { localStorage.setItem(KEY, JSON.stringify({meter: state.meter, saved: state.saved})); return true; } catch { return false; } }
+// settings always start from the values in this file; only the meter choice and saved months are kept
+const state = Object.assign({meter:'three', saved:[]}, load(), {rates:{}});
 const R = () => Object.assign({}, DEFAULT_RATES, state.rates, {slabs: DEFAULT_RATES.slabs});
 
 // ---------- helpers ----------
@@ -463,22 +456,13 @@ $('rates').addEventListener('input', e => {
   const k = e.target.dataset.rate, v = parseFloat(e.target.value);
   if (k && isFinite(v)){ state.rates[k] = v; store(); calc(); }
 });
-$('newbill').addEventListener('click', () => { $('newbill-confirm').hidden = false; $('newbill-row').hidden = true; });
-$('newbill-no').addEventListener('click', () => { $('newbill-confirm').hidden = true; $('newbill-row').hidden = false; });
-$('newbill-yes').addEventListener('click', () => {
-  const ids = state.meter === 'three' ? ['op','pk','ex'] : ['su'];
-  if (ids.some(id => $(id).value.trim() === '')){ toast('Write all readings first'); return; }
-  ids.forEach(id => { state.rates[READS[id]] = Math.floor(parseFloat($(id).value)); $(id).value = ''; });
-  store(); renderRates(); calc();
-  $('newbill-confirm').hidden = true; $('newbill-row').hidden = false; toast('Counting from the new readings');
-});
 $('rates-reset').addEventListener('click', () => { state.rates = {}; store(); renderRates(); calc(); toast('Rates reset'); });
 $('backup').addEventListener('click', () => {
-  const text = JSON.stringify({rates: state.rates, saved: state.saved});
+  const text = JSON.stringify({saved: state.saved});
   navigator.clipboard.writeText(text).then(() => toast('Backup copied'), () => { $('restore-text').value = text; $('restore-text').select(); toast('Select and copy the text'); });
 });
 $('restore').addEventListener('click', () => {
-  try { const d = JSON.parse($('restore-text').value); state.rates = d.rates || {}; state.saved = d.saved || []; store(); renderRates(); renderHistory(); calc(); toast('Backup restored'); }
+  try { const d = JSON.parse($('restore-text').value); state.saved = d.saved || []; store(); renderRates(); renderHistory(); calc(); toast('Backup restored'); }
   catch { toast('That backup text is not valid'); }
 });
 
