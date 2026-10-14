@@ -313,7 +313,11 @@ function line(label, how, amount, cls=''){ return `<tr class="${cls}"><td>${labe
 
 function renderResult(res){
   const r = R(), i = res.i, el = $('result');
-  if (!i.month){ el.innerHTML = '<p class="muted" style="margin:0">Choose a month and enter units.</p>'; return; }
+  if (!i.month){ el.innerHTML = '<p class="muted" style="margin:0">Choose the bill month.</p>'; return; }
+  if (Object.values(i.read || {}).every(v => String(v).trim() === '')){
+    el.innerHTML = '<h2>Your bill will show here</h2><p class="muted" style="margin:0">Write today’s meter readings above. The page counts the units from the last bill and works out the bill. <span class="ur">اوپر میٹر ریڈنگ لکھیں</span></p>';
+    return;
+  }
   const late5 = Math.round(res.charges * .05), late10 = Math.round(res.charges * .10);
   let rows = '', facts = [];
   if (res.kind === 'three'){
@@ -469,7 +473,6 @@ $('restore').addEventListener('click', () => {
 // ---------- start: this month, with the readings from the meter photos of 14 Oct 2026 ----------
 const now = new Date();
 $('month').value = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
-['op','pk','ex'].forEach((k,n) => $(k).value = ['22075.8','9853.2','33332.1'][n]);
 renderRates(); setMeter(state.meter === 'single' ? 'single' : 'three');
 })();
 </script>
