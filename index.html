@@ -49,6 +49,7 @@ header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-be
 /* form */
 .fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
 label.f{display:grid;gap:4px;font-weight:700}
+#three-fields label.f{grid-row:span 3;grid-template-rows:subgrid;align-items:start}
 label.f .hint{font-weight:400;font-size:.8rem;color:var(--muted)}
 input[type=number],input[type=month],textarea{font:inherit;font-size:1.15rem;padding:10px 12px;border:2px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);width:100%;min-width:0}
 input:focus-visible,button:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
@@ -118,13 +119,13 @@ details.rates[open] summary{margin-bottom:12px}
     </div>
 
     <div class="fields" id="three-fields">
-      <label class="f"><span><span class="tag t-off"></span>Off-peak import reading</span>
+      <label class="f"><span><span class="tag t-off"></span>Off-peak import</span>
         <input type="number" id="op" min="0" step="any" inputmode="decimal" placeholder="e.g. 22075.8">
         <span class="hint" id="h-op"></span></label>
-      <label class="f"><span><span class="tag t-peak"></span>Peak import reading</span>
+      <label class="f"><span><span class="tag t-peak"></span>Peak import</span>
         <input type="number" id="pk" min="0" step="any" inputmode="decimal" placeholder="e.g. 9853.2">
         <span class="hint" id="h-pk"></span></label>
-      <label class="f"><span><span class="tag t-exp"></span>Export reading</span>
+      <label class="f"><span><span class="tag t-exp"></span>Export</span>
         <input type="number" id="ex" min="0" step="any" inputmode="decimal" placeholder="e.g. 33332.1">
         <span class="hint" id="h-ex"></span></label>
     </div>
