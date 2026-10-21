@@ -155,7 +155,7 @@ details.rates[open] summary{margin-bottom:12px}
   <details class="card rates" id="rates-box">
     <summary>Settings &amp; rates (change only when LESCO changes them)</summary>
     <div class="fields" id="rates"></div>
-    <p class="small muted" style="margin:0">Defaults checked against the September 2026 bills of both meters and LESCO’s official bill estimator (Oct 2026). Changes here are for trying out numbers only and reset when the page is reopened.</p>
+    <p class="small muted" style="margin:0">Defaults checked against the October 2026 bills of both meters and LESCO’s official bill estimator (Oct 2026). Changes here are for trying out numbers only and reset when the page is reopened.</p>
     <div class="btns">
       <button class="btn ghost sm" type="button" id="rates-reset">Reset to defaults</button>
       <button class="btn ghost sm" type="button" id="backup">Copy backup</button>
@@ -172,11 +172,11 @@ details.rates[open] summary{margin-bottom:12px}
 // ---------- defaults (Sep-2026 bills + LESCO estimator) ----------
 const DEFAULT_RATES = {
   offRate: 34.53, peakRate: 46.85, fixedPerKw3: 675, minFixedShare: 0.5, sanLoad3: 5,
-  dgCap: 4.99, exportRate: 25.32, qta3: -0.90, qta1: -0.775, fcSurcharge: 3.23,
+  dgCap: 4.99, exportRate: 25.32, qta3: 0.5194, qta1: 0.5194, fcSurcharge: 3.23,
   ed: 1.5, gst: 18, incomeTax: 7.5, itThreshold: 25000, sanLoad1: 2, tvFee: 0,
-  // last month = September 2026 bills: MDI, FPA, and present readings that units are counted from
-  mdi: 10, exportMdi: 8, fpa3: 543, fpa1: 705,
-  prevOp: 21512, prevPk: 9617, prevEx: 32533, prevSingle: 9053,
+  // last month = October 2026 bills: MDI, export MDI, FPA, and present readings that units are counted from
+  mdi: 3, exportMdi: 9, fpa3: 1150, fpa1: 457,
+  prevOp: 22146, prevPk: 9883, prevEx: 33470, prevSingle: 9288,
   // single phase: whole bill at one slab rate, fixed per kW of sanctioned load by slab
   slabs: [
     {upTo:100, rate:22.44, fixed:275}, {upTo:200, rate:28.91, fixed:300},
@@ -206,13 +206,13 @@ const LESCO = {
     ['2025-12',473,171,632,-3409,null],['2026-01',860,312,390,44799,44799],['2026-02',390,185,937,7933,7933],
     ['2026-03',334,187,1106,10304,10304],['2026-04',413,199,1392,2390,2390],['2026-05',545,285,1120,3186,3186],
     ['2026-06',561,351,1234,31482,31482],['2026-07',697,428,920,40697,40697],['2026-08',993,422,609,49763,49763],
-    ['2026-09',995,368,945,51628,51628]
+    ['2026-09',995,368,945,51628,51628],['2026-10',634,266,937,24865,null]
   ].map(([m,op,pk,ex,bill,paid]) => ({month:m, op, pk, ex, bill, paid})),
   single: [
     ['2025-09',284,11161,11161],['2025-10',85,2448,2448],['2025-11',49,1290,1290],['2025-12',85,2538,null],
     ['2026-01',234,12964,12964],['2026-02',135,5408,5408],['2026-03',38,2287,2287],['2026-04',40,2124,2124],
     ['2026-05',153,6653,6653],['2026-06',233,10790,10790],['2026-07',286,12635,12635],['2026-08',344,16669,17358],
-    ['2026-09',437,23532,23532]
+    ['2026-09',437,23532,23532],['2026-10',235,11641,null]
   ].map(([m,u,bill,paid]) => ({month:m, u, bill, paid}))
 };
 
@@ -264,7 +264,7 @@ function calcThree(i, r){
   const fc = units * r.fcSurcharge, qta = units * r.qta3;
   const charges = energy + fixed + fc + qta;
   const t = taxes(r, charges, energy + qta, i.filer);
-  const total = Math.ceil(charges + t.ed + t.gst + t.it + r.tvFee + i.fpa - paidBack);
+  const total = Math.round(charges + t.ed + t.gst + t.it + r.tvFee + i.fpa - paidBack);
   return {kind:'three', i, credited, lost, capped, offBilled, peakBilled, units, offAmt, peakAmt, energy,
     fixedKw, fixed, fc, qta, charges, ...t, carryOut, paidBack, qpos, surplus: avail > 0, total,
     lost_value: lost * r.offRate, solarValue: (i.op - offBilled) * r.offRate + (i.pk - peakBilled) * r.peakRate};
@@ -278,7 +278,7 @@ function calcSingle(i, r){
   const fc = i.u * r.fcSurcharge, qta = i.u * r.qta1;
   const charges = energy + fixed + fc + qta;
   const t = taxes(r, charges, energy + qta, i.filer);
-  const total = Math.ceil(charges + t.ed + t.gst + t.it + r.tvFee + i.fpa);
+  const total = Math.round(charges + t.ed + t.gst + t.it + r.tvFee + i.fpa);
   const idx = r.slabs.indexOf(slab), lower = r.slabs[idx-1];
   return {kind:'single', i, slab, energy, fixed, fc, qta, charges, ...t, total, units:i.u,
     lowerSlab: lower ? {limit: lower.upTo, saving: energy - lower.upTo * lower.rate + (fixed - r.sanLoad1*lower.fixed), over: i.u - lower.upTo} : null};
